@@ -3,6 +3,7 @@
 TransferManagerImpl::TransferManagerImpl() {
 
 }
+
 TransferManagerImpl::~TransferManagerImpl() {
 
 }

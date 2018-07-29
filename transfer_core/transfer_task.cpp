@@ -7,11 +7,3 @@ TransferTask::TransferTask() {
 TransferTask::~TransferTask() {
 
 }
-
-void TransferTask::Start() {
-
-}
-
-void TransferTask::Cancel() {
-
-}

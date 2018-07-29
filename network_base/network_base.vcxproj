@@ -19,8 +19,8 @@
     </ProjectConfiguration>
   </ItemGroup>
   <PropertyGroup Label="Globals">
-    <ProjectGuid>{E355CB7E-AB48-4710-BC11-069AB1B36FB8}</ProjectGuid>
-    <RootNamespace>transfer_core</RootNamespace>
+    <ProjectGuid>{8E05CDA7-8A2D-4F0F-B385-B7E0916F1F9C}</ProjectGuid>
+    <RootNamespace>network_base</RootNamespace>
     <WindowsTargetPlatformVersion>8.1</WindowsTargetPlatformVersion>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
@@ -90,12 +90,14 @@
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <SDLCheck>true</SDLCheck>
-      <AdditionalIncludeDirectories>..\..\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\..\include;F:\source\libevent-2.1.8-stable\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>_CRT_SECURE_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
     <Link>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
-      <AdditionalLibraryDirectories>..\..\lib\vc_lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>..\..\lib\vc_lib;F:\source\libevent-2.1.8-stable;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>libevent.lib;libevent_core.lib;Ws2_32.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
@@ -112,15 +114,11 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClInclude Include="transfer_manager.h" />
-    <ClInclude Include="transfer_manager_impl.h" />
-    <ClInclude Include="transfer_task.h" />
+    <ClCompile Include="event_loop.cpp" />
+    <ClCompile Include="network_base_test.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="transfer_core_test.cpp" />
-    <ClCompile Include="transfer_manager.cpp" />
-    <ClCompile Include="transfer_manager_impl.cpp" />
-    <ClCompile Include="transfer_task.cpp" />
+    <ClInclude Include="event_loop.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
