@@ -4,26 +4,39 @@
 #include <iostream>
 
 class EventHandler : public EventLoop::Delegate {
+public:
   virtual void OnConnect(wxUint32 id) {
-
+    std::cout << "connect to " << id << std::endl;
   }
 
   virtual void OnRead(wxUint32 id, wxSocketInputStream& stream) {
-    std::string buf(1024, 0);
-    stream.Read((void*)(buf.c_str()), buf.size());
-    wxInt32 rdcnt = stream.LastRead();
-    buf.resize(rdcnt);
-    std::cout << buf << std::endl;
+    char buffer[1024] = { 0 };
+    stream.Read(buffer, sizeof(buffer));
+    wxUint32 rdcnt = stream.LastRead();
+    if (rdcnt > 0) {
+      buffer_.append(buffer);
+    }
   }
 
   virtual void OnWrite(wxUint32 id, wxSocketOutputStream& stream) {
-    std::string buf = "hello world";
-    //stream.Write(buf.c_str(), buf.size());
+    while (true) {
+      size_t pos = buffer_.find('\n');
+      if (pos != std::string::npos) {
+        stream.Write(buffer_.c_str(), pos + 1);
+        buffer_.erase(0, pos + 1);
+      }
+      else {
+        break;
+      }
+    }
   }
 
   virtual void OnClose(wxUint32 id) {
-
+    std::cout << "closed to " << id << std::endl;
   }
+
+private:
+  std::string buffer_;
 };
 
 int main(int argc, char* argv[]) {

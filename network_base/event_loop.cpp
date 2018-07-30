@@ -6,7 +6,6 @@ EventLoop::EventLoop(wxIPaddress& addr, Delegate* delegate)
   , delegate_(delegate) {
   event_base_ = event_base_new();
   wxASSERT(event_base_);
-  evutil_make_socket_nonblocking(socket_server_.GetSocket());
   socket_server_.SetFlags(wxSOCKET_REUSEADDR);
 }
 
@@ -27,7 +26,8 @@ wxThread::ExitCode EventLoop::Entry() {
     event_new(event_base_, socket_server_.GetSocket(), 
       EV_READ | EV_PERSIST, DoAccept, (void*)this);
   event_add(listener_event, nullptr);
-  event_base_dispatch(event_base_);
+  int ret = event_base_dispatch(event_base_);
+  ret;
   return nullptr;
 }
 
@@ -42,8 +42,8 @@ void EventLoop::DoAccept(evutil_socket_t listener, short event) {
   std::unique_ptr<wxSocketBase> socket_client = std::make_unique<wxSocketBase>();
   if (socket_server_.AcceptWith(*socket_client)) {
     if (delegate_)
-      delegate_->OnConnect(listener);
-    evutil_make_socket_nonblocking(socket_client->GetSocket());
+      delegate_->OnConnect(socket_client->GetSocket());
+    socket_client->SetFlags(wxSOCKET_NOWAIT);
     struct event *read_event = event_new(event_base_, socket_client->GetSocket(), EV_READ | EV_PERSIST, DoRead, this);
     event_add(read_event, nullptr);
     struct event *write_event = event_new(event_base_, socket_client->GetSocket(), EV_WRITE | EV_PERSIST, DoWrite, this);
@@ -64,6 +64,11 @@ void EventLoop::DoRead(evutil_socket_t fd, short event) {
     = id_to_sockets_.find(fd);
   if (itsock != id_to_sockets_.end()) {
     wxSocketInputStream input(*itsock->second);
+    if (input.Eof()) {
+      if (delegate_)
+        delegate_->OnClose(fd);
+      return;
+    }
     if (delegate_)
       delegate_->OnRead(fd, input);
   }
