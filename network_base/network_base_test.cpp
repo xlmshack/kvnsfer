@@ -3,8 +3,18 @@
 #include <wx/socket.h>
 #include <iostream>
 
-class EventHandler : public EventLoop::Delegate {
+class EventHandler : public EventLoop
+                   , public EventLoop::Delegate {
 public:
+  EventHandler(wxIPaddress& addr)
+    :EventLoop(addr, this) {
+
+  }
+
+  virtual ~EventHandler() {
+
+  }
+
   virtual void OnConnect(wxUint32 id) {
     std::cout << "connect to " << id << std::endl;
   }
@@ -16,19 +26,20 @@ public:
     if (rdcnt > 0) {
       buffer_.append(buffer);
     }
-  }
-
-  virtual void OnWrite(wxUint32 id, wxSocketOutputStream& stream) {
     while (true) {
       size_t pos = buffer_.find('\n');
       if (pos != std::string::npos) {
-        stream.Write(buffer_.c_str(), pos + 1);
+        this->Write(id, buffer_.c_str(), pos + 1);
         buffer_.erase(0, pos + 1);
       }
       else {
         break;
       }
     }
+  }
+
+  virtual void OnWrite(wxUint32 id, wxSocketOutputStream& stream) {
+
   }
 
   virtual void OnClose(wxUint32 id) {
@@ -44,10 +55,9 @@ int main(int argc, char* argv[]) {
   wxIPV4address addr;
   addr.Hostname("127.0.0.1");
   addr.Service(8080);
-  EventHandler handler;
-  EventLoop loop(addr, &handler);
-  loop.Run();
-  loop.Wait();
+  EventHandler handler(addr);
+  handler.Run();
+  handler.Wait();
   wxUninitialize();
   return 0;
 }

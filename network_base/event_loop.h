@@ -10,6 +10,12 @@
 #include <memory>
 
 class EventLoop : public wxThread {
+private:
+  struct Internal {
+    struct event *read_event;
+    struct event *write_event;
+    std::unique_ptr<wxSocketBase> socket_client;
+  };
 public:
   class Delegate {
   public:
@@ -18,11 +24,13 @@ public:
     virtual void OnWrite(wxUint32 id, wxSocketOutputStream& stream) = 0;
     virtual void OnClose(wxUint32 id) = 0;
   };
+
   EventLoop(wxIPaddress& addr, Delegate* delegate);
   ~EventLoop();
 
   void SetDelegate(Delegate* delegate);
   Delegate* GetDelegate();
+  bool Write(wxUint32 id, const void *buffer, size_t size);
 
 protected:
   // wxThread
@@ -39,7 +47,7 @@ private:
   wxSocketServer socket_server_;
   Delegate* delegate_;
   struct event_base* event_base_;
-  std::map<evutil_socket_t, std::unique_ptr<wxSocketBase> > id_to_sockets_;
+  std::map<evutil_socket_t, Internal> id_to_sockets_;
 
   wxDECLARE_NO_COPY_CLASS(EventLoop);
 };
