@@ -47,8 +47,8 @@ void EventLoop::DoAccept(evutil_socket_t listener, short event) {
     Internal& item = id_to_sockets_[socket_client->GetSocket()];
     item.read_event = event_new(event_base_, socket_client->GetSocket(), EV_READ | EV_PERSIST, DoRead, this);
     event_add(item.read_event, nullptr);
-    item.write_event = event_new(event_base_, socket_client->GetSocket(), EV_WRITE, DoWrite, this);
-    event_add(item.write_event, nullptr);
+    //item.write_event = event_new(event_base_, socket_client->GetSocket(), EV_WRITE, DoWrite, this);
+    //event_add(item.write_event, nullptr);
     item.socket_client = std::move(socket_client);
   }
 }
@@ -98,11 +98,14 @@ void EventLoop::DoWrite(evutil_socket_t fd, short events) {
   }
 }
 
-bool EventLoop::Write(wxUint32 id, const void *buffer, size_t size) {
+bool EventLoop::SetNeedWrite(wxUint32 id) {
   std::map<evutil_socket_t, Internal>::iterator itsock
     = id_to_sockets_.find(id);
   if (itsock != id_to_sockets_.end()) {
-    itsock->second.socket_client->Write(buffer, size);
+    if(!itsock->second.write_event)
+      itsock->second.write_event = event_new(
+        event_base_, itsock->second.socket_client->GetSocket(), 
+        EV_WRITE, DoWrite, this);
     event_add(itsock->second.write_event, nullptr);
     return true;
   }

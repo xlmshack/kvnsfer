@@ -19,6 +19,7 @@ private:
 public:
   class Delegate {
   public:
+    virtual ~Delegate() {}
     virtual void OnConnect(wxUint32 id) = 0;
     virtual void OnRead(wxUint32 id, wxSocketInputStream& stream) = 0;
     virtual void OnWrite(wxUint32 id, wxSocketOutputStream& stream) = 0;
@@ -26,11 +27,11 @@ public:
   };
 
   EventLoop(wxIPaddress& addr, Delegate* delegate);
-  ~EventLoop();
+  ~EventLoop() wxOVERRIDE;
 
   void SetDelegate(Delegate* delegate);
   Delegate* GetDelegate();
-  bool Write(wxUint32 id, const void *buffer, size_t size);
+  bool SetNeedWrite(wxUint32 id);
 
 protected:
   // wxThread
