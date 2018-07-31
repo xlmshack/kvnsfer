@@ -32,6 +32,7 @@ public:
   void SetDelegate(Delegate* delegate);
   Delegate* GetDelegate();
   bool SetNeedWrite(wxUint32 id);
+  void Close(wxUint32 id);
 
 protected:
   // wxThread
