@@ -12,9 +12,10 @@
 class EventLoop : public wxThread {
 private:
   struct Internal {
+    Internal();
     struct event *read_event;
     struct event *write_event;
-    std::unique_ptr<wxSocketBase> socket_client;
+    std::unique_ptr<wxSocketBase> socket;
   };
 public:
   class Delegate {
@@ -46,7 +47,6 @@ protected:
   static void DoWrite(evutil_socket_t fd, short events, void *arg);
 
 private:
-  wxSocketServer socket_server_;
   Delegate* delegate_;
   struct event_base* event_base_;
   std::map<evutil_socket_t, Internal> id_to_sockets_;

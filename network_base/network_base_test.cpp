@@ -3,6 +3,7 @@
 #include <wx/socket.h>
 #include <iostream>
 #include <algorithm>
+#include <map>
 
 class EventHandler : public EventLoop
                    , public EventLoop::Delegate {
@@ -18,6 +19,7 @@ public:
 
   virtual void OnAccept(wxUint32 id) {
     std::cout << "accept to " << id << std::endl;
+    buffers_[id];
   }
 
   virtual void OnRead(wxUint32 id, wxInputStream& stream) {
@@ -25,30 +27,31 @@ public:
     stream.Read(buffer, sizeof(buffer));
     wxUint32 rdcnt = stream.LastRead();      
     if (rdcnt > 0) {
-      buffer_.append(buffer);
+      buffers_.find(id)->second.append(buffer);
     }
-    size_t pos = buffer_.find('\n');
+    size_t pos = buffers_.find(id)->second.find('\n');
     if (pos != std::string::npos) {
       this->SetNeedWrite(id);
     }
   }
 
   virtual void OnWrite(wxUint32 id, wxOutputStream& stream) {
-    size_t pos = buffer_.find('\n');
+    size_t pos = buffers_.find(id)->second.find('\n');
     if (pos != std::string::npos) {
-      std::string line = buffer_.substr(0, pos + 1);
+      std::string line = buffers_.find(id)->second.substr(0, pos + 1);
       std::transform(line.begin(), line.end(), line.begin(), toupper);
       stream.Write(line.c_str(), line.size());
-      buffer_.erase(0, pos + 1);
+      buffers_.find(id)->second.erase(0, pos + 1);
     }
   }
 
   virtual void OnClose(wxUint32 id) {
     std::cout << "closed to " << id << std::endl;
+    buffers_.erase(id);
   }
 
 private:
-  std::string buffer_;
+  std::map<wxUint32, std::string> buffers_;
 };
 
 int main(int argc, char* argv[]) {

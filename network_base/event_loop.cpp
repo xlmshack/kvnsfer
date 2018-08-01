@@ -1,12 +1,23 @@
 #include "event_loop.h"
 
+EventLoop::Internal::Internal()
+  :read_event(nullptr)
+  , write_event(nullptr) {}
+
 EventLoop::EventLoop(wxIPaddress& addr, Delegate* delegate)
   :wxThread(wxTHREAD_JOINABLE)
-  , socket_server_(addr)
   , delegate_(delegate) {
   event_base_ = event_base_new();
   wxASSERT(event_base_);
-  socket_server_.SetFlags(wxSOCKET_REUSEADDR);
+  std::unique_ptr<wxSocketServer> socket_server =
+    std::make_unique<wxSocketServer>(addr);
+  socket_server->SetFlags(wxSOCKET_REUSEADDR | wxSOCKET_NOWAIT);
+  Internal& item = id_to_sockets_[socket_server->GetSocket()];
+  item.read_event = event_new(event_base_, socket_server->GetSocket(),
+    EV_READ | EV_PERSIST, DoAccept, (void*)this);
+  wxASSERT(item.read_event);
+  event_add(item.read_event, nullptr);
+  item.socket = std::move(socket_server);
 }
 
 EventLoop::~EventLoop() {
@@ -22,12 +33,7 @@ EventLoop::Delegate* EventLoop::GetDelegate() {
 }
 
 wxThread::ExitCode EventLoop::Entry() {
-  struct event* listener_event = 
-    event_new(event_base_, socket_server_.GetSocket(), 
-      EV_READ | EV_PERSIST, DoAccept, (void*)this);
-  event_add(listener_event, nullptr);
-  int ret = event_base_dispatch(event_base_);
-  ret = WSAGetLastError();
+  event_base_dispatch(event_base_);
   return nullptr;
 }
 
@@ -39,15 +45,19 @@ void EventLoop::DoAccept(evutil_socket_t listener, short event, void *arg) {
 }
 
 void EventLoop::DoAccept(evutil_socket_t listener, short event) {
-  std::unique_ptr<wxSocketBase> socket_client = std::make_unique<wxSocketBase>();
-  if (socket_server_.AcceptWith(*socket_client)) {
-    if (delegate_)
-      delegate_->OnAccept(socket_client->GetSocket());
-    socket_client->SetFlags(wxSOCKET_NOWAIT);
-    Internal& item = id_to_sockets_[socket_client->GetSocket()];
-    item.read_event = event_new(event_base_, socket_client->GetSocket(), EV_READ | EV_PERSIST, DoRead, this);
-    event_add(item.read_event, nullptr);
-    item.socket_client = std::move(socket_client);
+  auto& itsock = id_to_sockets_.find(listener);
+  if (itsock != id_to_sockets_.end()) {
+    wxSocketServer* socket_server = (wxSocketServer*)itsock->second.socket.get();
+    std::unique_ptr<wxSocketBase> socket_peer = std::make_unique<wxSocketBase>();
+    if (socket_server->AcceptWith(*socket_peer)) {
+      if (delegate_)
+        delegate_->OnAccept(socket_peer->GetSocket());
+      socket_peer->SetFlags(wxSOCKET_NOWAIT);
+      Internal& item = id_to_sockets_[socket_peer->GetSocket()];
+      item.read_event = event_new(event_base_, socket_peer->GetSocket(), EV_READ | EV_PERSIST, DoRead, this);
+      event_add(item.read_event, nullptr);
+      item.socket = std::move(socket_peer);
+    }
   }
 }
 
@@ -62,13 +72,15 @@ void EventLoop::DoRead(evutil_socket_t fd, short event) {
   std::map<evutil_socket_t, Internal>::iterator itsock
     = id_to_sockets_.find(fd);
   if (itsock != id_to_sockets_.end()) {
-    wxSocketInputStream input(*itsock->second.socket_client);
+    wxSocketInputStream input(*itsock->second.socket);
     input.Peek();
     if (input.Eof()) {
       if (delegate_)
         delegate_->OnClose(fd);
-      event_free(itsock->second.read_event);
-      event_free(itsock->second.write_event);
+      if (itsock->second.read_event)
+        event_free(itsock->second.read_event);
+      if (itsock->second.write_event)
+        event_free(itsock->second.write_event);
       id_to_sockets_.erase(itsock);
       return;
     }
@@ -88,7 +100,7 @@ void EventLoop::DoWrite(evutil_socket_t fd, short events) {
   std::map<evutil_socket_t, Internal>::iterator itsock
     = id_to_sockets_.find(fd);
   if (itsock != id_to_sockets_.end()) {
-    wxSocketOutputStream output(*itsock->second.socket_client);
+    wxSocketOutputStream output(*itsock->second.socket);
     if (delegate_)
       delegate_->OnWrite(fd, output);
     if (output.LastWrite() > 0)
@@ -102,7 +114,7 @@ bool EventLoop::SetNeedWrite(wxUint32 id) {
   if (itsock != id_to_sockets_.end()) {
     if(!itsock->second.write_event)
       itsock->second.write_event = event_new(
-        event_base_, itsock->second.socket_client->GetSocket(), 
+        event_base_, itsock->second.socket->GetSocket(), 
         EV_WRITE, DoWrite, this);
     event_add(itsock->second.write_event, nullptr);
     return true;
