@@ -1,7 +1,7 @@
 #include "http_server.h"
 
 HttpServer::HttpServer(wxIPaddress& addr)
-  :EventLoop(addr, this) {
+  :event_loop_(addr, this) {
 
 }
 
@@ -9,15 +9,15 @@ HttpServer::~HttpServer() {
 
 }
 
-void HttpServer::OnConnect(wxUint32 id) {
+void HttpServer::OnAccept(wxUint32 id) {
 
 }
 
-void HttpServer::OnRead(wxUint32 id, wxSocketInputStream& stream) {
+void HttpServer::OnRead(wxUint32 id, wxInputStream& stream) {
 
 }
 
-void HttpServer::OnWrite(wxUint32 id, wxSocketOutputStream& stream) {
+void HttpServer::OnWrite(wxUint32 id, wxOutputStream& stream) {
 
 }
 

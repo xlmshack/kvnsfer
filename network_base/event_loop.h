@@ -20,9 +20,9 @@ public:
   class Delegate {
   public:
     virtual ~Delegate() {}
-    virtual void OnConnect(wxUint32 id) = 0;
-    virtual void OnRead(wxUint32 id, wxSocketInputStream& stream) = 0;
-    virtual void OnWrite(wxUint32 id, wxSocketOutputStream& stream) = 0;
+    virtual void OnAccept(wxUint32 id) = 0;
+    virtual void OnRead(wxUint32 id, wxInputStream& stream) = 0;
+    virtual void OnWrite(wxUint32 id, wxOutputStream& stream) = 0;
     virtual void OnClose(wxUint32 id) = 0;
   };
 

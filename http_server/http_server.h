@@ -6,8 +6,7 @@
 
 class HttpServerRequestInfo;
 
-class HttpServer : public EventLoop
-                 , public EventLoop::Delegate {
+class HttpServer : public EventLoop::Delegate {
 public:
   class Delegate {
   public:
@@ -22,10 +21,13 @@ public:
   ~HttpServer();
 
   // EventLoop::Delegate
-  void OnConnect(wxUint32 id) wxOVERRIDE;
-  void OnRead(wxUint32 id, wxSocketInputStream& stream) wxOVERRIDE;
-  void OnWrite(wxUint32 id, wxSocketOutputStream& stream) wxOVERRIDE;
+  void OnAccept(wxUint32 id) wxOVERRIDE;
+  void OnRead(wxUint32 id, wxInputStream& stream) wxOVERRIDE;
+  void OnWrite(wxUint32 id, wxOutputStream& stream) wxOVERRIDE;
   void OnClose(wxUint32 id) wxOVERRIDE;
+
+private:
+  EventLoop event_loop_;
 };
 
 #endif // KVNSFER_HTTP_SERVER_HTTP_SERVER_H_

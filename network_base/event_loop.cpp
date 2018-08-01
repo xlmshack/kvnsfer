@@ -42,7 +42,7 @@ void EventLoop::DoAccept(evutil_socket_t listener, short event) {
   std::unique_ptr<wxSocketBase> socket_client = std::make_unique<wxSocketBase>();
   if (socket_server_.AcceptWith(*socket_client)) {
     if (delegate_)
-      delegate_->OnConnect(socket_client->GetSocket());
+      delegate_->OnAccept(socket_client->GetSocket());
     socket_client->SetFlags(wxSOCKET_NOWAIT);
     Internal& item = id_to_sockets_[socket_client->GetSocket()];
     item.read_event = event_new(event_base_, socket_client->GetSocket(), EV_READ | EV_PERSIST, DoRead, this);

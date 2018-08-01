@@ -16,11 +16,11 @@ public:
 
   }
 
-  virtual void OnConnect(wxUint32 id) {
-    std::cout << "connect to " << id << std::endl;
+  virtual void OnAccept(wxUint32 id) {
+    std::cout << "accept to " << id << std::endl;
   }
 
-  virtual void OnRead(wxUint32 id, wxSocketInputStream& stream) {
+  virtual void OnRead(wxUint32 id, wxInputStream& stream) {
     char buffer[1024] = { 0 };
     stream.Read(buffer, sizeof(buffer));
     wxUint32 rdcnt = stream.LastRead();      
@@ -33,7 +33,7 @@ public:
     }
   }
 
-  virtual void OnWrite(wxUint32 id, wxSocketOutputStream& stream) {
+  virtual void OnWrite(wxUint32 id, wxOutputStream& stream) {
     size_t pos = buffer_.find('\n');
     if (pos != std::string::npos) {
       std::string line = buffer_.substr(0, pos + 1);
