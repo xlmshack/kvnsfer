@@ -17,6 +17,10 @@ public:
 
   }
 
+  virtual void OnConnect(wxUint32 id) {
+
+  }
+
   virtual void OnAccept(wxUint32 id) {
     std::cout << "accept to " << id << std::endl;
     buffers_[id];

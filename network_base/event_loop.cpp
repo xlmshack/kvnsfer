@@ -108,6 +108,22 @@ void EventLoop::DoWrite(evutil_socket_t fd, short events) {
   }
 }
 
+void EventLoop::DoConnect(evutil_socket_t fd, short event) {
+  std::map<evutil_socket_t, Internal>::iterator itsock
+    = id_to_sockets_.find(fd);
+  if (itsock != id_to_sockets_.end()) {
+    if (delegate_)
+      delegate_->OnConnect(fd);
+  }
+}
+
+// static
+void EventLoop::DoConnect(evutil_socket_t fd, short events, void* arg) {
+  wxASSERT(arg);
+  EventLoop* cur = (EventLoop*)arg;
+  cur->DoConnect(fd, events);
+}
+
 bool EventLoop::SetNeedWrite(wxUint32 id) {
   std::map<evutil_socket_t, Internal>::iterator itsock
     = id_to_sockets_.find(id);
@@ -120,6 +136,23 @@ bool EventLoop::SetNeedWrite(wxUint32 id) {
     return true;
   }
   return false;
+}
+
+wxUint32 EventLoop::Connect(wxIPaddress& peer) {
+  std::unique_ptr<wxSocketClient> socket_client = std::make_unique<wxSocketClient>();
+  socket_client->SetFlags(wxSOCKET_NOWAIT);
+  bool connected = socket_client->Connect(peer);
+  Internal& item = id_to_sockets_[socket_client->GetSocket()];
+  item.socket = std::move(socket_client);
+  if (connected) {
+    DoConnect(item.socket->GetSocket(), EV_WRITE, this);
+  }
+  else {
+    item.write_event = event_new(event_base_, item.socket->GetSocket(), EV_WRITE, DoWrite, this);
+    event_add(item.write_event, nullptr);
+  }
+  item.read_event = event_new(event_base_, item.socket->GetSocket(), EV_READ | EV_PERSIST, DoRead, this);
+  event_add(item.read_event, nullptr);
 }
 
 void EventLoop::Close(wxUint32 id) {

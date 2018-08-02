@@ -22,6 +22,7 @@ public:
   public:
     virtual ~Delegate() {}
     virtual void OnAccept(wxUint32 id) = 0;
+    virtual void OnConnect(wxUint32 id) = 0;
     virtual void OnRead(wxUint32 id, wxInputStream& stream) = 0;
     virtual void OnWrite(wxUint32 id, wxOutputStream& stream) = 0;
     virtual void OnClose(wxUint32 id) = 0;
@@ -33,18 +34,21 @@ public:
   void SetDelegate(Delegate* delegate);
   Delegate* GetDelegate();
   bool SetNeedWrite(wxUint32 id);
+  wxUint32 Connect(wxIPaddress& peer);
   void Close(wxUint32 id);
 
 protected:
   // wxThread
   virtual ExitCode Entry() wxOVERRIDE;
 
-  void DoAccept(evutil_socket_t listener, short event);
-  static void DoAccept(evutil_socket_t listener, short event, void *arg);
-  void DoRead(evutil_socket_t listener, short event);
-  static void DoRead(evutil_socket_t fd, short events, void *arg);
+  void DoAccept(evutil_socket_t fd, short event);
+  static void DoAccept(evutil_socket_t fd, short event, void* arg);
+  void DoRead(evutil_socket_t fd, short event);
+  static void DoRead(evutil_socket_t fd, short events, void* arg);
   void DoWrite(evutil_socket_t fd, short events);
-  static void DoWrite(evutil_socket_t fd, short events, void *arg);
+  static void DoWrite(evutil_socket_t fd, short events, void* arg);
+  void DoConnect(evutil_socket_t fd, short event);
+  static void DoConnect(evutil_socket_t fd, short events, void* arg);
 
 private:
   Delegate* delegate_;
