@@ -146,6 +146,7 @@ wxUint32 EventLoop::Connect(wxIPaddress& peer) {
   item.socket = std::move(socket_client);
   if (connected) {
     DoConnect(item.socket->GetSocket(), EV_WRITE, this);
+    DoWrite(item.socket->GetSocket(), EV_WRITE, this);
   }
   else {
     item.write_event = event_new(event_base_, item.socket->GetSocket(), EV_WRITE, DoWrite, this);
@@ -153,6 +154,7 @@ wxUint32 EventLoop::Connect(wxIPaddress& peer) {
   }
   item.read_event = event_new(event_base_, item.socket->GetSocket(), EV_READ | EV_PERSIST, DoRead, this);
   event_add(item.read_event, nullptr);
+  return item.socket->GetSocket();
 }
 
 void EventLoop::Close(wxUint32 id) {
