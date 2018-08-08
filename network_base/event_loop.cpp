@@ -1,24 +1,14 @@
 #include "event_loop.h"
 
 EventLoop::Internal::Internal()
-  :read_event(nullptr)
-  , write_event(nullptr) {}
+  :bev(nullptr) {}
 
-EventLoop::EventLoop(wxIPaddress& addr, Delegate* delegate)
-  :wxThread(wxTHREAD_JOINABLE)
-  , delegate_(delegate) {
-  event_base_ = event_base_new();
-  wxASSERT(event_base_);
-  std::unique_ptr<wxSocketServer> socket_server =
-    std::make_unique<wxSocketServer>(addr);
-  socket_server->SetFlags(wxSOCKET_REUSEADDR | wxSOCKET_NOWAIT);
-  Internal& item = id_to_sockets_[socket_server->GetSocket()];
-  item.read_event = event_new(event_base_, socket_server->GetSocket(),
-    EV_READ | EV_PERSIST, DoAccept, (void*)this);
-  wxASSERT(item.read_event);
-  event_add(item.read_event, nullptr);
-  item.socket = std::move(socket_server);
-}
+EventLoop::EventLoop(const std::string& addr, uint16_t port, Delegate* delegate)
+  : wxThread(wxTHREAD_JOINABLE)
+  , delegate_(delegate)
+  , event_base_(event_base_new())
+  , address_(addr)
+  , port_(port_) {}
 
 EventLoop::~EventLoop() {
   event_base_free(event_base_);
@@ -33,128 +23,50 @@ EventLoop::Delegate* EventLoop::GetDelegate() {
 }
 
 wxThread::ExitCode EventLoop::Entry() {
+  struct sockaddr_in sin;
+  memset(&sin, 0, sizeof(sin));
+  sin.sin_family = AF_INET;
+  sin.sin_addr.s_addr = inet_addr(address_.c_str());
+  sin.sin_port = htons(port_);
+  struct evconnlistener* listener = evconnlistener_new_bind(event_base_, do_listener_cb, this,
+    LEV_OPT_REUSEABLE | LEV_OPT_CLOSE_ON_FREE, -1, (struct sockaddr*)&sin, sizeof(sin));
+  if (!listener)
+    return nullptr;
   event_base_dispatch(event_base_);
+  evconnlistener_free(listener);
+  event_base_free(event_base_);
   return nullptr;
-}
-
-// static
-void EventLoop::DoAccept(evutil_socket_t listener, short event, void *arg) {
-  wxASSERT(arg);
-  EventLoop* cur = (EventLoop*)arg;
-  cur->DoAccept(listener, event);
-}
-
-void EventLoop::DoAccept(evutil_socket_t listener, short event) {
-  auto& itsock = id_to_sockets_.find(listener);
-  if (itsock != id_to_sockets_.end()) {
-    wxSocketServer* socket_server = (wxSocketServer*)itsock->second.socket.get();
-    std::unique_ptr<wxSocketBase> socket_peer = std::make_unique<wxSocketBase>();
-    if (socket_server->AcceptWith(*socket_peer)) {
-      if (delegate_)
-        delegate_->OnAccept(socket_peer->GetSocket());
-      socket_peer->SetFlags(wxSOCKET_NOWAIT);
-      Internal& item = id_to_sockets_[socket_peer->GetSocket()];
-      item.read_event = event_new(event_base_, socket_peer->GetSocket(), EV_READ | EV_PERSIST, DoRead, this);
-      event_add(item.read_event, nullptr);
-      item.socket = std::move(socket_peer);
-    }
-  }
-}
-
-// static
-void EventLoop::DoRead(evutil_socket_t fd, short events, void *arg) {
-  wxASSERT(arg);
-  EventLoop* cur = (EventLoop*)arg;
-  cur->DoRead(fd, events);
-}
-
-void EventLoop::DoRead(evutil_socket_t fd, short event) {
-  std::map<evutil_socket_t, Internal>::iterator itsock
-    = id_to_sockets_.find(fd);
-  if (itsock != id_to_sockets_.end()) {
-    wxSocketInputStream input(*itsock->second.socket);
-    input.Peek();
-    if (input.Eof()) {
-      if (delegate_)
-        delegate_->OnClose(fd);
-      if (itsock->second.read_event)
-        event_free(itsock->second.read_event);
-      if (itsock->second.write_event)
-        event_free(itsock->second.write_event);
-      id_to_sockets_.erase(itsock);
-      return;
-    }
-    if (delegate_)
-      delegate_->OnRead(fd, input);
-  }
-}
-
-// static
-void EventLoop::DoWrite(evutil_socket_t fd, short events, void *arg) {
-  wxASSERT(arg);
-  EventLoop* cur = (EventLoop*)arg;
-  cur->DoWrite(fd, events);
-}
-
-void EventLoop::DoWrite(evutil_socket_t fd, short events) {
-  std::map<evutil_socket_t, Internal>::iterator itsock
-    = id_to_sockets_.find(fd);
-  if (itsock != id_to_sockets_.end()) {
-    wxSocketOutputStream output(*itsock->second.socket);
-    if (delegate_)
-      delegate_->OnWrite(fd, output);
-    if (output.LastWrite() > 0)
-      event_add(itsock->second.write_event, nullptr);
-  }
-}
-
-void EventLoop::DoConnect(evutil_socket_t fd, short event) {
-  std::map<evutil_socket_t, Internal>::iterator itsock
-    = id_to_sockets_.find(fd);
-  if (itsock != id_to_sockets_.end()) {
-    if (delegate_)
-      delegate_->OnConnect(fd);
-  }
-}
-
-// static
-void EventLoop::DoConnect(evutil_socket_t fd, short events, void* arg) {
-  wxASSERT(arg);
-  EventLoop* cur = (EventLoop*)arg;
-  cur->DoConnect(fd, events);
 }
 
 bool EventLoop::SetNeedWrite(wxUint32 id) {
   std::map<evutil_socket_t, Internal>::iterator itsock
     = id_to_sockets_.find(id);
   if (itsock != id_to_sockets_.end()) {
-    if(!itsock->second.write_event)
+    if (!itsock->second.write_event)
       itsock->second.write_event = event_new(
-        event_base_, itsock->second.socket->GetSocket(), 
-        EV_WRITE, DoWrite, this);
+        event_base_, itsock->second.fd,
+        EV_WRITE | EV_PERSIST, DoWrite, this);
     event_add(itsock->second.write_event, nullptr);
     return true;
   }
   return false;
 }
 
-wxUint32 EventLoop::Connect(wxIPaddress& peer) {
-  std::unique_ptr<wxSocketClient> socket_client = std::make_unique<wxSocketClient>();
-  socket_client->SetFlags(wxSOCKET_NOWAIT);
-  bool connected = socket_client->Connect(peer);
-  Internal& item = id_to_sockets_[socket_client->GetSocket()];
-  item.socket = std::move(socket_client);
-  if (connected) {
-    DoConnect(item.socket->GetSocket(), EV_WRITE, this);
-    DoWrite(item.socket->GetSocket(), EV_WRITE, this);
-  }
-  else {
-    item.write_event = event_new(event_base_, item.socket->GetSocket(), EV_WRITE, DoWrite, this);
-    event_add(item.write_event, nullptr);
-  }
-  item.read_event = event_new(event_base_, item.socket->GetSocket(), EV_READ | EV_PERSIST, DoRead, this);
+wxUint32 EventLoop::Connect(const std::string& addr, uint16_t port) {
+  struct sockaddr_in sin;
+  sin.sin_family = AF_INET;
+  sin.sin_addr.s_addr = inet_addr(addr.c_str());
+  sin.sin_port = htons(port);
+  evutil_socket_t fd = socket(AF_INET, SOCK_STREAM, 0);
+  evutil_make_socket_nonblocking(fd);
+  Internal& item = id_to_sockets_[fd];
+  item.fd = fd;
+  item.write_event = event_new(event_base_, fd, EV_WRITE | EV_PERSIST, DoWrite, this);
+  item.read_event = event_new(event_base_, fd, EV_READ | EV_PERSIST, DoRead, this);
   event_add(item.read_event, nullptr);
-  return item.socket->GetSocket();
+  event_add(item.write_event, nullptr);
+  connect(fd, (const sockaddr*)&sin, sizeof(sin));
+  return fd;
 }
 
 void EventLoop::Close(wxUint32 id) {
@@ -168,5 +80,73 @@ void EventLoop::Close(wxUint32 id) {
     id_to_sockets_.erase(id);
     if (delegate_)
       delegate_->OnClose(id);
+  }
+}
+
+// static
+void EventLoop::do_listener_cb(struct evconnlistener* listener,
+  evutil_socket_t fd, struct sockaddr* addr, int socklen, void* arg) {
+  wxASSERT(arg);
+  EventLoop* cur = (EventLoop*)arg;
+  cur->do_listener_cb(listener, fd, addr, socklen);
+}
+
+void EventLoop::do_listener_cb(struct evconnlistener* listener,
+  evutil_socket_t fd, struct sockaddr* addr, int socklen) {
+  if (delegate_)
+    delegate_->OnAccept(fd);
+  evutil_make_socket_nonblocking(fd);
+  struct bufferevent *bev = bufferevent_socket_new(event_base_, fd, BEV_OPT_CLOSE_ON_FREE);
+  bufferevent_setcb(bev, do_read_cb, do_write_cb, do_event_cb, this);
+  bufferevent_enable(bev, EV_READ | EV_WRITE);
+  id_to_sockets_[fd].bev = bev;
+}
+
+// static
+void EventLoop::do_read_cb(struct bufferevent *bev, void *arg) {
+  wxASSERT(arg);
+  EventLoop* cur = (EventLoop*)arg;
+  cur->do_read_cb(bev);
+}
+
+void EventLoop::do_read_cb(struct bufferevent *bev) {
+  struct evbuffer *input = bufferevent_get_input(bev);
+  evutil_socket_t fd = bufferevent_getfd(bev);
+  char buf[1024];
+  while (evbuffer_get_length(input) > 0) {
+    int nread = evbuffer_remove(input, buf, sizeof(buf));
+    if (delegate_)
+      delegate_->OnRead(fd, buf, nread);
+  }
+}
+
+// static
+void EventLoop::do_write_cb(struct bufferevent *bev, void *arg) {
+  wxASSERT(arg);
+  EventLoop* cur = (EventLoop*)arg;
+  cur->do_write_cb(bev);
+}
+
+void EventLoop::do_write_cb(struct bufferevent *bev) {
+  evutil_socket_t fd = bufferevent_getfd(bev);
+  if (delegate_)
+    delegate_->OnWrite(fd);
+}
+
+// static
+void EventLoop::do_event_cb(struct bufferevent *bev, short what, void *arg) {
+  wxASSERT(arg);
+  EventLoop* cur = (EventLoop*)arg;
+  cur->do_event_cb(bev, what);
+}
+
+void EventLoop::do_event_cb(struct bufferevent *bev, short what) {
+
+}
+
+void EventLoop::Write(wxUint32 id) {
+  auto itbev = id_to_sockets_.find(id);
+  if (itbev != id_to_sockets_.end()) {
+
   }
 }
