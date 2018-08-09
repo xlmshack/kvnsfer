@@ -3,6 +3,7 @@
 
 #include <wx/defs.h>
 #include <wx/thread.h>
+#include <wx/buffer.h>
 #include <event2/event.h>
 #include <event2/listener.h>
 #include <event2/bufferevent.h>
@@ -24,7 +25,7 @@ public:
     virtual ~Delegate() {}
     virtual void OnAccept(wxUint32 id) = 0;
     virtual void OnConnect(wxUint32 id) = 0;
-    virtual void OnRead(wxUint32 id, const char* buf, wxUint32 size) = 0;
+    virtual void OnRead(wxUint32 id, const wxMemoryBuffer& buffer) = 0;
     virtual void OnWrite(wxUint32 id) = 0;
     virtual void OnClose(wxUint32 id) = 0;
   };
@@ -36,7 +37,7 @@ public:
   Delegate* GetDelegate();
   bool SetNeedWrite(wxUint32 id);
   wxUint32 Connect(const std::string& addr, uint16_t port);
-  void Write(wxUint32 id);
+  void Write(wxUint32 id, const wxMemoryBuffer& buffer);
   void Close(wxUint32 id);
 
 protected:

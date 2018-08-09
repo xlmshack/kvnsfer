@@ -42,11 +42,7 @@ bool EventLoop::SetNeedWrite(wxUint32 id) {
   std::map<evutil_socket_t, Internal>::iterator itsock
     = id_to_sockets_.find(id);
   if (itsock != id_to_sockets_.end()) {
-    if (!itsock->second.write_event)
-      itsock->second.write_event = event_new(
-        event_base_, itsock->second.fd,
-        EV_WRITE | EV_PERSIST, DoWrite, this);
-    event_add(itsock->second.write_event, nullptr);
+    bufferevent_enable(itsock->second.bev, EV_READ | EV_WRITE);
     return true;
   }
   return false;
@@ -54,18 +50,15 @@ bool EventLoop::SetNeedWrite(wxUint32 id) {
 
 wxUint32 EventLoop::Connect(const std::string& addr, uint16_t port) {
   struct sockaddr_in sin;
+  memset(&sin, 0, sizeof(sin));
   sin.sin_family = AF_INET;
-  sin.sin_addr.s_addr = inet_addr(addr.c_str());
-  sin.sin_port = htons(port);
-  evutil_socket_t fd = socket(AF_INET, SOCK_STREAM, 0);
-  evutil_make_socket_nonblocking(fd);
-  Internal& item = id_to_sockets_[fd];
-  item.fd = fd;
-  item.write_event = event_new(event_base_, fd, EV_WRITE | EV_PERSIST, DoWrite, this);
-  item.read_event = event_new(event_base_, fd, EV_READ | EV_PERSIST, DoRead, this);
-  event_add(item.read_event, nullptr);
-  event_add(item.write_event, nullptr);
-  connect(fd, (const sockaddr*)&sin, sizeof(sin));
+  sin.sin_addr.s_addr = inet_addr(address_.c_str());
+  sin.sin_port = htons(port_);
+  struct bufferevent* bev = bufferevent_socket_new(event_base_, -1, BEV_OPT_CLOSE_ON_FREE);
+  evutil_socket_t fd = bufferevent_getfd(bev);
+  bufferevent_socket_connect(bev, (const sockaddr*)&sin, sizeof(sin));
+  bufferevent_setcb(bev, do_read_cb, do_write_cb, do_event_cb, this);
+  bufferevent_enable(bev, EV_READ | EV_WRITE);
   return fd;
 }
 
@@ -73,13 +66,7 @@ void EventLoop::Close(wxUint32 id) {
   std::map<evutil_socket_t, Internal>::iterator itsock
     = id_to_sockets_.find(id);
   if (itsock != id_to_sockets_.end()) {
-    if (itsock->second.read_event)
-      event_free(itsock->second.read_event);
-    if (itsock->second.write_event)
-      event_free(itsock->second.write_event);
-    id_to_sockets_.erase(id);
-    if (delegate_)
-      delegate_->OnClose(id);
+    bufferevent_free(itsock->second.bev);
   }
 }
 
@@ -112,12 +99,15 @@ void EventLoop::do_read_cb(struct bufferevent *bev, void *arg) {
 void EventLoop::do_read_cb(struct bufferevent *bev) {
   struct evbuffer *input = bufferevent_get_input(bev);
   evutil_socket_t fd = bufferevent_getfd(bev);
-  char buf[1024];
+  wxMemoryBuffer buffer;
   while (evbuffer_get_length(input) > 0) {
+    char buf[1024];
     int nread = evbuffer_remove(input, buf, sizeof(buf));
-    if (delegate_)
-      delegate_->OnRead(fd, buf, nread);
+    if (nread > 0)
+      buffer.AppendData(buf, nread);
   }
+  if (buffer.GetDataLen() > 0 && delegate_)
+    delegate_->OnRead(fd, buffer);
 }
 
 // static
@@ -144,9 +134,11 @@ void EventLoop::do_event_cb(struct bufferevent *bev, short what) {
 
 }
 
-void EventLoop::Write(wxUint32 id) {
+void EventLoop::Write(wxUint32 id, const wxMemoryBuffer& buffer) {
   auto itbev = id_to_sockets_.find(id);
   if (itbev != id_to_sockets_.end()) {
-
+    evbuffer* output = bufferevent_get_output(itbev->second.bev);
+    evbuffer_add(output, buffer.GetData(), buffer.GetDataLen());
+    bufferevent_enable(itbev->second.bev, EV_WRITE | EV_READ);
   }
 }
