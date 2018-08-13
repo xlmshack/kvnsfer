@@ -8,8 +8,8 @@
 class EventHandler : public EventLoop
                    , public EventLoop::Delegate {
 public:
-  EventHandler(wxIPaddress& addr)
-    :EventLoop(addr, this) {
+  EventHandler()
+    :EventLoop(this) {
 
   }
 
@@ -18,53 +18,37 @@ public:
   }
 
   virtual void OnConnect(wxUint32 id) {
-
+    std::cout << "connected to [" << id << "]" << std::endl;
+    std::string data = "hello world";
+    Write(id, data.c_str(), data.size());
+    std::cout << "wrote into [" << id << "]" << std::endl;
   }
 
-  virtual void OnAccept(wxUint32 id) {
-    std::cout << "accept to " << id << std::endl;
-    buffers_[id];
+  virtual void OnAccept(wxUint32 id, const std::string& addr, wxUint16 port) {
+    std::cout << "accepted to [" << id << "] " << addr << ':' << port << std::endl;
   }
 
-  virtual void OnRead(wxUint32 id, wxInputStream& stream) {
-    char buffer[1024] = { 0 };
-    stream.Read(buffer, sizeof(buffer));
-    wxUint32 rdcnt = stream.LastRead();      
-    if (rdcnt > 0) {
-      buffers_.find(id)->second.append(buffer);
-    }
-    size_t pos = buffers_.find(id)->second.find('\n');
-    if (pos != std::string::npos) {
-      this->SetNeedWrite(id);
-    }
+  virtual void OnRead(wxUint32 id, const char* buffer, wxUint32 size) {
+    std::cout << "read from [" << id << "] buffer:" << std::string(buffer, size) << std::endl;
   }
 
-  virtual void OnWrite(wxUint32 id, wxOutputStream& stream) {
-    size_t pos = buffers_.find(id)->second.find('\n');
-    if (pos != std::string::npos) {
-      std::string line = buffers_.find(id)->second.substr(0, pos + 1);
-      std::transform(line.begin(), line.end(), line.begin(), toupper);
-      stream.Write(line.c_str(), line.size());
-      buffers_.find(id)->second.erase(0, pos + 1);
-    }
+  virtual void OnWrite(wxUint32 id) {
+    std::cout << "wrote complete at [" << id << "]" << std::endl;
   }
 
   virtual void OnClose(wxUint32 id) {
-    std::cout << "closed to " << id << std::endl;
-    buffers_.erase(id);
+    std::cout << "closed at [" << id << "]" << std::endl;
   }
-
-private:
-  std::map<wxUint32, std::string> buffers_;
 };
 
 int main(int argc, char* argv[]) {
   wxInitialize();
-  wxIPV4address addr;
-  addr.Hostname("127.0.0.1");
-  addr.Service(8080);
-  EventHandler handler(addr);
+  EventHandler handler;
+  std::string addr = "0.0.0.0";
+  uint16_t port = 0;
+  handler.Listen(addr, &port, 1);
   handler.Run();
+  wxUint32 id = handler.Connect("45.78.10.146", 7);
   handler.Wait();
   wxUninitialize();
   return 0;

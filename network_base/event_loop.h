@@ -8,6 +8,8 @@
 #include <event2/listener.h>
 #include <event2/bufferevent.h>
 #include <event2/buffer.h>
+#include <event2/thread.h>
+#include <event2/util.h>
 #include <map>
 #include <memory>
 #include <string>
@@ -23,30 +25,30 @@ public:
   class Delegate {
   public:
     virtual ~Delegate() {}
-    virtual void OnAccept(wxUint32 id) = 0;
+    virtual void OnAccept(wxUint32 id, const std::string& addr, wxUint16 port) = 0;
     virtual void OnConnect(wxUint32 id) = 0;
-    virtual void OnRead(wxUint32 id, const wxMemoryBuffer& buffer) = 0;
+    virtual void OnRead(wxUint32 id, const char* buffer, wxUint32 size) = 0;
     virtual void OnWrite(wxUint32 id) = 0;
     virtual void OnClose(wxUint32 id) = 0;
   };
 
-  EventLoop(const std::string& addr, uint16_t port, Delegate* delegate);
+  EventLoop(Delegate* delegate);
   ~EventLoop() wxOVERRIDE;
 
   void SetDelegate(Delegate* delegate);
   Delegate* GetDelegate();
-  bool SetNeedWrite(wxUint32 id);
+  bool Listen(const std::string& addr, uint16_t* port, int backlog);
   wxUint32 Connect(const std::string& addr, uint16_t port);
-  void Write(wxUint32 id, const wxMemoryBuffer& buffer);
+  void Write(wxUint32 id, const char* buffer, wxUint32 size);
   void Close(wxUint32 id);
 
 protected:
   // wxThread
   virtual ExitCode Entry() wxOVERRIDE;
 
-  static void do_listener_cb(struct evconnlistener* listener, 
+  static void do_accept_cb(struct evconnlistener* listener, 
     evutil_socket_t fd, struct sockaddr* addr, int socklen, void* arg);
-  void do_listener_cb(struct evconnlistener* listener,
+  void do_accept_cb(struct evconnlistener* listener,
     evutil_socket_t fd, struct sockaddr* addr, int socklen);
   static void do_read_cb(struct bufferevent *bev, void *arg);
   void do_read_cb(struct bufferevent *bev);
@@ -58,10 +60,7 @@ protected:
 private:
   Delegate* delegate_;
   struct event_base* event_base_;
-  std::string address_;
-  uint16_t port_;
   std::map<evutil_socket_t, Internal> id_to_sockets_;
-
   wxDECLARE_NO_COPY_CLASS(EventLoop);
 };
 
