@@ -1,4 +1,5 @@
 #ifndef KVNSFER_HTTP_SERVER_HTTP_SERVER_REQUEST_INFO_H
+#define KVNSFER_HTTP_SERVER_HTTP_SERVER_REQUEST_INFO_H
 
 #include <string>
 #include <map>

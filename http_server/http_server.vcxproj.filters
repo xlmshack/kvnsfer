@@ -27,6 +27,24 @@
     <ClCompile Include="http_server_response_info.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="http_status_code.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="http_request_headers.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="http_util.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="string_split.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="http_connection.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="string_util.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="http_server.h">
@@ -36,6 +54,27 @@
       <Filter>Source Files</Filter>
     </ClInclude>
     <ClInclude Include="http_server_response_info.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="http_status_code_list.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="http_status_code.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="http_request_headers.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="http_util.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="string_split.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="http_connection.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="string_util.h">
       <Filter>Source Files</Filter>
     </ClInclude>
   </ItemGroup>

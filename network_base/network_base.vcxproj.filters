@@ -21,9 +21,15 @@
     <ClCompile Include="event_loop.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="winsock_init.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="event_loop.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="winsock_init.h">
       <Filter>Source Files</Filter>
     </ClInclude>
   </ItemGroup>

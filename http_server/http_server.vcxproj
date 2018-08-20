@@ -115,15 +115,28 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="http_connection.cpp" />
+    <ClCompile Include="http_request_headers.cpp" />
     <ClCompile Include="http_server.cpp" />
     <ClCompile Include="http_server_request_info.cpp" />
     <ClCompile Include="http_server_response_info.cpp" />
     <ClCompile Include="http_server_test.cpp" />
+    <ClCompile Include="http_status_code.cpp" />
+    <ClCompile Include="http_util.cpp" />
+    <ClCompile Include="string_split.cpp" />
+    <ClCompile Include="string_util.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="http_connection.h" />
+    <ClInclude Include="http_request_headers.h" />
     <ClInclude Include="http_server.h" />
     <ClInclude Include="http_server_request_info.h" />
     <ClInclude Include="http_server_response_info.h" />
+    <ClInclude Include="http_status_code.h" />
+    <ClInclude Include="http_status_code_list.h" />
+    <ClInclude Include="http_util.h" />
+    <ClInclude Include="string_split.h" />
+    <ClInclude Include="string_util.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

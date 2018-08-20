@@ -41,6 +41,7 @@ public:
   wxUint32 Connect(const std::string& addr, uint16_t port);
   void Write(wxUint32 id, const char* buffer, wxUint32 size);
   void Close(wxUint32 id);
+  void Exit();
 
 protected:
   // wxThread

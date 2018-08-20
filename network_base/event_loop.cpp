@@ -74,6 +74,10 @@ void EventLoop::Close(wxUint32 id) {
   }
 }
 
+void EventLoop::Exit() {
+  event_base_loopexit(event_base_, nullptr);
+}
+
 wxThread::ExitCode EventLoop::Entry() {
   return (ExitCode)event_base_dispatch(event_base_);
 }
