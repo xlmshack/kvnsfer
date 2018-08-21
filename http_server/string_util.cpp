@@ -1,5 +1,6 @@
 #include "string_util.h"
 #include <algorithm>
+#include <iterator>
 #include <wx/string.h>
 
 namespace base {
@@ -41,7 +42,7 @@ char ToLowerASCII(char c) {
 
 std::string ToLowerASCII(std::string str) {
   std::string ret;
-  std::transform(str.begin(), str.end(), ret.begin(), tolower);
+  std::transform(str.begin(), str.end(), std::back_inserter(ret), tolower);
   return ret;
 }
 
@@ -70,6 +71,16 @@ std::string TrimWhitespace(std::string input,
   return TrimString(input, " ", TrimPositions::TRIM_ALL);
 }
 
+std::string StringPrintf(_Printf_format_string_ const char* format,
+  ...) {
+  va_list ap;
+  va_start(ap, format);
+  wxString str;
+  str.PrintfV(format, ap);
+  va_end(ap);
+  return str.ToStdString();
+}
+
 void StringAppendF(std::string* dst, const char* format, ...) {
   va_list ap;
   va_start(ap, format);
@@ -77,6 +88,18 @@ void StringAppendF(std::string* dst, const char* format, ...) {
   str.PrintfV(format, ap);
   dst->append(str.ToStdString());
   va_end(ap);
+}
+
+bool StringToSizeT(const std::string& input, size_t* output) {
+  wxString str(input);
+  unsigned long val = 0;
+  if (str.ToULong(&val)) {
+    *output = val;
+    return true;
+  }
+  else {
+    return false;
+  }
 }
 
 }

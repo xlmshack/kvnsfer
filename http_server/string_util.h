@@ -24,9 +24,14 @@ std::string TrimString(std::string input,
 std::string TrimWhitespace(std::string input,
   TrimPositions positions);
 
+std::string StringPrintf(_Printf_format_string_ const char* format,
+  ...);
+
 void StringAppendF(std::string* dst,
   _Printf_format_string_ const char* format,
   ...);
+
+bool StringToSizeT(const std::string& input, size_t* output);
 
 }
 #endif // KVNSFER_HTTP_SERVER_STRING_UTIL_H_

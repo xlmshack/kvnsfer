@@ -1,5 +1,8 @@
 #include "http_server_response_info.h"
+#include "http_request_headers.h"
+#include "string_util.h"
 #include <wx/defs.h>
+#include <wx/string.h>
 
 HttpServerResponseInfo::HttpServerResponseInfo() : status_code_(HTTP_OK) {}
 
@@ -42,13 +45,13 @@ void HttpServerResponseInfo::SetContentHeaders(
   size_t content_length,
   const std::string& content_type) {
   AddHeader(HttpRequestHeaders::kContentLength,
-    base::StringPrintf("%" PRIuS, content_length));
+    base::StringPrintf("%u", content_length));
   AddHeader(HttpRequestHeaders::kContentType, content_type);
 }
 
 std::string HttpServerResponseInfo::Serialize() const {
   std::string response = base::StringPrintf(
-    "HTTP/1.1 %d %s\r\n", status_code_, GetHttpReasonPhrase(status_code_));
+    "HTTP/1.1 %d %s\r\n", status_code_, wxString(GetHttpReasonPhrase(status_code_)).ToStdWstring().c_str());
   Headers::const_iterator header;
   for (header = headers_.begin(); header != headers_.end(); ++header)
     response += header->first + ":" + header->second + "\r\n";
