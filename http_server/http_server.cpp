@@ -17,7 +17,7 @@ HttpServer::~HttpServer() {
 
 void HttpServer::StartServer(const std::string& addr, wxUint16* port) {
   event_loop_.Listen(addr, port, 1);
-  event_loop_.Run();
+  event_loop_.Start();
 }
 
 void HttpServer::StopServer() {

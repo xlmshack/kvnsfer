@@ -6,6 +6,7 @@
 #include <wx/thread.h>
 #include <wx/init.h>
 #include "http_status_code.h"
+#include "base/apr_init.h"
 
 class TransferServer : public HttpServer::Delegate {
 public:
@@ -43,6 +44,7 @@ private:
 };
 
 int main(int argc, char* argv[]) {
+  base::EnsureAprInit();
   wxInitializer init;
   wxMutex mutex;
   wxCondition cond(mutex);

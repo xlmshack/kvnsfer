@@ -47,7 +47,7 @@ int main(int argc, char* argv[]) {
   std::string addr = "0.0.0.0";
   uint16_t port = 0;
   handler.Listen(addr, &port, 1);
-  handler.Run();
+  handler.Start();
   wxUint32 id = handler.Connect("45.78.10.146", 7);
   handler.Wait();
   wxUninitialize();

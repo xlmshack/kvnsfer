@@ -21,6 +21,12 @@
     <ClInclude Include="mutex.h">
       <Filter>Source Files</Filter>
     </ClInclude>
+    <ClInclude Include="condition.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="apr_init.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="thread.cpp">
@@ -30,6 +36,12 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="mutex.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="condition.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="apr_init.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

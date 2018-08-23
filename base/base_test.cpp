@@ -1,6 +1,7 @@
 #include "thread.h"
 #include "apr_general.h"
 #include <iostream>
+#include "apr_init.h"
 
 class MyThread : public base::Thread {
 public:
@@ -13,12 +14,9 @@ public:
 };
 
 int main(int argc, char *argv[]) {
-  apr_initialize();
-  {
-    MyThread thr;
-    thr.Start();
-    thr.Wait();
-  }
-  apr_terminate();
+  base::EnsureAprInit();
+  MyThread thr;
+  thr.Start();
+  thr.Wait();
   return 0;
 }

@@ -5,8 +5,7 @@ EventLoop::Internal::Internal()
   :bev(nullptr) {}
 
 EventLoop::EventLoop(Delegate* delegate)
-  : wxThread(wxTHREAD_JOINABLE)
-  , delegate_(delegate) {
+  : delegate_(delegate) {
   EnsureWinsockInit();
 #ifdef _WIN32
   evthread_use_windows_threads();
@@ -78,8 +77,8 @@ void EventLoop::Exit() {
   event_base_loopexit(event_base_, nullptr);
 }
 
-wxThread::ExitCode EventLoop::Entry() {
-  return (ExitCode)event_base_dispatch(event_base_);
+void EventLoop::Entry() {
+  event_base_dispatch(event_base_);
 }
 
 // static

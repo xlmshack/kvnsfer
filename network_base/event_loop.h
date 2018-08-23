@@ -14,8 +14,9 @@
 #include <memory>
 #include <string>
 #include <utility>
+#include "base/thread.h"
 
-class EventLoop : public wxThread {
+class EventLoop : public base::Thread {
 private:
   struct Internal {
     Internal();
@@ -45,7 +46,7 @@ public:
 
 protected:
   // wxThread
-  virtual ExitCode Entry() wxOVERRIDE;
+  virtual void Entry() wxOVERRIDE;
 
   static void do_accept_cb(struct evconnlistener* listener, 
     evutil_socket_t fd, struct sockaddr* addr, int socklen, void* arg);
