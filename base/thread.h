@@ -24,6 +24,9 @@ protected:
 private:
   apr_pool_t* pool_;
   apr_thread_t* thread_;
+
+  Thread(const Thread&) = delete;
+  Thread& operator=(const Thread&) = delete;
 };
 
 } // namespace base

@@ -11,9 +11,6 @@ Thread::Thread()
 }
 
 Thread::~Thread() {
-  apr_status_t status = APR_SUCCESS;
-  if (thread_)
-    status = apr_thread_exit(thread_, APR_SUCCESS);
   if (pool_)
     apr_pool_destroy(pool_);
 }
