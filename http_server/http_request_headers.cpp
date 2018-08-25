@@ -5,8 +5,8 @@
 #include <wx/log.h>
 
 #include "http_util.h"
-#include "string_util.h"
-#include "string_split.h"
+#include "base/string_util.h"
+#include "base/string_split.h"
 
 const char HttpRequestHeaders::kGetMethod[] = "GET";
 const char HttpRequestHeaders::kAcceptCharset[] = "Accept-Charset";

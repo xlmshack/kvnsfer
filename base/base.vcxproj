@@ -35,7 +35,7 @@
     <UseDebugLibraries>false</UseDebugLibraries>
     <PlatformToolset>v140</PlatformToolset>
     <WholeProgramOptimization>true</WholeProgramOptimization>
-    <CharacterSet>MultiByte</CharacterSet>
+    <CharacterSet>Unicode</CharacterSet>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
@@ -90,9 +90,9 @@
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <SDLCheck>true</SDLCheck>
-      <AdditionalIncludeDirectories>F:\source\apr-1.6.3-win32-src\apr-1.6.3\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <PreprocessorDefinitions>APR_DECLARE_EXPORT</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>E:\source\apr-1.6.3-win32-src\apr-1.6.3\include;E:\source\wxWidgets-3.1.1\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
+      <PreprocessorDefinitions>APR_DECLARE_EXPORT;%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
     <Link>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
@@ -100,6 +100,9 @@
       <AdditionalLibraryDirectories>F:\source\apr-1.6.3-win32-src\apr-1.6.3\LibR;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <AdditionalDependencies>apr-1.lib;Ws2_32.lib;Rpcrt4.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
+    <Lib>
+      <AdditionalDependencies>%(AdditionalDependencies)</AdditionalDependencies>
+    </Lib>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <ClCompile>
@@ -116,15 +119,21 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="apr_init.h" />
+    <ClInclude Include="blocking_queue.h" />
     <ClInclude Include="condition.h" />
     <ClInclude Include="mutex.h" />
+    <ClInclude Include="string_split.h" />
+    <ClInclude Include="string_util.h" />
     <ClInclude Include="thread.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="apr_init.cpp" />
     <ClCompile Include="base_test.cpp" />
+    <ClCompile Include="blocking_queue.cpp" />
     <ClCompile Include="condition.cpp" />
     <ClCompile Include="mutex.cpp" />
+    <ClCompile Include="string_split.cpp" />
+    <ClCompile Include="string_util.cpp" />
     <ClCompile Include="thread.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

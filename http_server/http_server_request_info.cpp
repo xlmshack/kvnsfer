@@ -1,7 +1,7 @@
 #include "http_server_request_info.h"
 #include <algorithm>
 #include <wx/defs.h>
-#include "string_util.h"
+#include "base/string_util.h"
 
 HttpServerRequestInfo::HttpServerRequestInfo() {}
 

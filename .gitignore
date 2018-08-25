@@ -6,3 +6,4 @@ transfer_core/Release/
 network_base/Release/
 *.vcxproj.user
 http_server/Release/
+base/Release/

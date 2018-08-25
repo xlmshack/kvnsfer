@@ -1,6 +1,6 @@
 #include "http_server_response_info.h"
 #include "http_request_headers.h"
-#include "string_util.h"
+#include "base/string_util.h"
 #include <wx/defs.h>
 #include <wx/string.h>
 

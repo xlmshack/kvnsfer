@@ -2,7 +2,7 @@
 #include "http_server_request_info.h"
 #include "http_server_response_info.h"
 #include <iostream>
-#include "string_util.h"
+#include "base/string_util.h"
 #include <wx/thread.h>
 #include <wx/init.h>
 #include "http_status_code.h"

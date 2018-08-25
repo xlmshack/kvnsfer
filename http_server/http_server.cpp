@@ -2,7 +2,7 @@
 #include "http_connection.h"
 #include "http_server_request_info.h"
 #include "http_server_response_info.h"
-#include "string_util.h"
+#include "base/string_util.h"
 
 HttpServer::HttpServer(const std::string& vir_host, Delegate* delegate)
   :event_loop_(this)

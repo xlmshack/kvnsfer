@@ -33,5 +33,6 @@ void StringAppendF(std::string* dst,
 
 bool StringToSizeT(const std::string& input, size_t* output);
 
-}
+} // namespace base
+
 #endif // KVNSFER_HTTP_SERVER_STRING_UTIL_H_

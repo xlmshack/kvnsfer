@@ -5,6 +5,7 @@
 #include <string>
 
 namespace base {
+
 enum WhitespaceHandling {
   KEEP_WHITESPACE,
   TRIM_WHITESPACE,
@@ -31,6 +32,7 @@ std::vector<std::string> SplitString(
   std::string separators,
   WhitespaceHandling whitespace,
   SplitResult result_type);
-}
+
+} // namespace base
 
 #endif // KVNSFER_HTTP_SERVER_STRING_SPLIT_H_

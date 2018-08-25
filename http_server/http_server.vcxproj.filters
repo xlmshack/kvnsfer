@@ -36,13 +36,7 @@
     <ClCompile Include="http_util.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="string_split.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="http_connection.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="string_util.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
@@ -68,13 +62,7 @@
     <ClInclude Include="http_util.h">
       <Filter>Source Files</Filter>
     </ClInclude>
-    <ClInclude Include="string_split.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
     <ClInclude Include="http_connection.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
-    <ClInclude Include="string_util.h">
       <Filter>Source Files</Filter>
     </ClInclude>
   </ItemGroup>

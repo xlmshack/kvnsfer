@@ -27,6 +27,15 @@
     <ClInclude Include="apr_init.h">
       <Filter>Source Files</Filter>
     </ClInclude>
+    <ClInclude Include="blocking_queue.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="string_split.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="string_util.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="thread.cpp">
@@ -42,6 +51,15 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="apr_init.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="blocking_queue.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="string_split.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="string_util.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
