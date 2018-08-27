@@ -5,6 +5,7 @@ VisualStudioVersion = 14.0.25420.1
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "transfer_core", "transfer_core\transfer_core.vcxproj", "{E355CB7E-AB48-4710-BC11-069AB1B36FB8}"
 	ProjectSection(ProjectDependencies) = postProject
+		{AB2C666F-E916-4C5D-AEE0-E5C2693FC1EF} = {AB2C666F-E916-4C5D-AEE0-E5C2693FC1EF}
 		{05114A8B-7190-484A-AFA9-1F7BA5F4576A} = {05114A8B-7190-484A-AFA9-1F7BA5F4576A}
 	EndProjectSection
 EndProject

@@ -1,18 +1,18 @@
 #include "http_connection.h"
 
-HttpConnection::HttpConnection(wxUint32 id)
+HttpConnection::HttpConnection(apr_uint32_t id)
   :id_(id) {}
 
 HttpConnection::~HttpConnection() {}
 
-wxUint32 HttpConnection::GetId() {
+apr_uint32_t HttpConnection::GetId() {
   return id_;
 }
 
-wxMemoryBuffer& HttpConnection::GetReadBuf() {
+std::string& HttpConnection::GetReadBuf() {
   return read_buf_;
 }
 
-wxMemoryBuffer& HttpConnection::GetWriteBuf() {
+std::string& HttpConnection::GetWriteBuf() {
   return write_buf_;
 }

@@ -1,8 +1,6 @@
 #ifndef KVNSFER_TRANSFER_CORE_TRANSFER_MANAGER_H_
 #define KVNSFER_TRANSFER_CORE_TRANSFER_MANAGER_H_
 
-#include <wx/defs.h>
-
 class TransferManager {
 public:
   TransferManager();
@@ -13,6 +11,7 @@ public:
   virtual void CancelTransferTask() = 0;
   virtual void RemoveTransferTask() = 0;
 
-  wxDECLARE_NO_COPY_CLASS(TransferManager);
+  TransferManager(const TransferManager&) = delete;
+  TransferManager& operator=(const TransferManager&) = delete;
 };
 #endif // KVNSFER_TRANSFER_CORE_TRANSFER_MANAGER_H_

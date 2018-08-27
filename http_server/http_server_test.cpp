@@ -3,16 +3,17 @@
 #include "http_server_response_info.h"
 #include <iostream>
 #include "base/string_util.h"
-#include <wx/thread.h>
-#include <wx/init.h>
+#include "base/mutex.h"
+#include "base/condition.h"
 #include "http_status_code.h"
 #include "base/apr_init.h"
+#include "apr.h"
 
 class TransferServer : public HttpServer::Delegate {
 public:
   TransferServer()
     :server_("", this) {
-    wxUint16 port = 1990;
+    apr_uint16_t port = 1990;
     server_.StartServer("0.0.0.0", &port);
   }
 
@@ -45,9 +46,8 @@ private:
 
 int main(int argc, char* argv[]) {
   base::EnsureAprInit();
-  wxInitializer init;
-  wxMutex mutex;
-  wxCondition cond(mutex);
+  base::Mutex mutex;
+  base::Condition cond(mutex);
   TransferServer transfer;
   cond.Wait();
   return 0;

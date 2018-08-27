@@ -2,7 +2,6 @@
 
 #include <utility>
 #include <assert.h>
-#include <wx/log.h>
 
 #include "http_util.h"
 #include "base/string_util.h"

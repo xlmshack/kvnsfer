@@ -1,7 +1,8 @@
 #include "http_server_request_info.h"
 #include <algorithm>
-#include <wx/defs.h>
 #include "base/string_util.h"
+#include <assert.h>
+#include "base/string_split.h"
 
 HttpServerRequestInfo::HttpServerRequestInfo() {}
 
@@ -12,7 +13,7 @@ HttpServerRequestInfo::~HttpServerRequestInfo() {}
 
 std::string HttpServerRequestInfo::GetHeaderValue(
   const std::string& header_name) const {
-  wxASSERT(base::ToLowerASCII(header_name) == header_name);
+  assert(base::ToLowerASCII(header_name) == header_name);
   HttpServerRequestInfo::HeadersMap::const_iterator it =
     headers.find(header_name);
   if (it != headers.end())
@@ -23,15 +24,13 @@ std::string HttpServerRequestInfo::GetHeaderValue(
 bool HttpServerRequestInfo::HasHeaderValue(
   const std::string& header_name,
   const std::string& header_value) const {
-  wxASSERT(base::ToLowerASCII(header_value) == header_value);
+  assert(base::ToLowerASCII(header_value) == header_value);
   std::string complete_value = base::ToLowerASCII(GetHeaderValue(header_name));
 
-  // TODO(elvis) replace code below with std::string.
-  wxString wx_complete_value(complete_value.c_str(), complete_value.size());
-  wxArrayString split_res = wxSplit(wx_complete_value, ',');
-  for (auto itcur = split_res.begin(); itcur != split_res.end(); ++itcur) {
-    if (itcur->Trim().Trim(false) == 
-      wxString(header_value.c_str(), header_value.size()))
+  for (const std::string& cur :
+    base::SplitString(complete_value, ",", base::KEEP_WHITESPACE,
+      base::SPLIT_WANT_NONEMPTY)) {
+    if (base::TrimString(cur, " \t", base::TRIM_ALL) == header_value)
       return true;
   }
   return false;

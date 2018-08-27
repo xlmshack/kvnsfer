@@ -1,7 +1,8 @@
 #include "string_util.h"
 #include <algorithm>
 #include <iterator>
-#include <wx/string.h>
+#include <apr_lib.h>
+#include <apr_cstr.h>
 
 namespace base {
 
@@ -49,8 +50,6 @@ std::string ToLowerASCII(std::string str) {
 std::string TrimString(std::string input,
   const std::string& trim_chars,
   TrimPositions positions) {
-  if (positions == TrimPositions::TRIM_NONE)
-    return input;
   if (positions | TrimPositions::TRIM_LEADING) {
     std::string::size_type left_pos = input.find_first_not_of(trim_chars);
     if (left_pos != std::string::npos) {
@@ -71,35 +70,64 @@ std::string TrimWhitespace(std::string input,
   return TrimString(input, " ", TrimPositions::TRIM_ALL);
 }
 
+namespace {
+
+struct apr_vformatter_buff_t_ex : public apr_vformatter_buff_t {
+  apr_vformatter_buff_t_ex()
+    :buffer(1024, '\xcc') {
+    curpos = &buffer[0];
+    endpos = &buffer[1024];
+  }
+  void reset() {
+    curpos = &buffer[0];
+    endpos = &buffer[1024];
+  }
+  std::string toString() {
+    if (curpos != &buffer[0])
+      data += buffer.substr(0, curpos - &buffer[0]);
+    return data;
+  }
+  std::string buffer;
+  std::string data;
+};
+
+int flush_func(apr_vformatter_buff_t* b) {
+  apr_vformatter_buff_t_ex* vbufex = (apr_vformatter_buff_t_ex*)b;
+  vbufex->data.append(vbufex->buffer);
+  vbufex->reset();
+  return 0;
+}
+
+std::string StringPrintV(_Printf_format_string_ const char* format, va_list ap) {
+  apr_vformatter_buff_t_ex vbufex;
+  apr_vformatter(flush_func, &vbufex, format, ap);
+  return vbufex.toString();
+}
+
+}
+
 std::string StringPrintf(_Printf_format_string_ const char* format,
   ...) {
   va_list ap;
   va_start(ap, format);
-  wxString str;
-  str.PrintfV(format, ap);
-  va_end(ap);
-  return str.ToStdString();
+  return StringPrintV(format, ap);
 }
 
 void StringAppendF(std::string* dst, const char* format, ...) {
   va_list ap;
   va_start(ap, format);
-  wxString str;
-  str.PrintfV(format, ap);
-  dst->append(str.ToStdString());
+  dst->append(StringPrintV(format, ap));
   va_end(ap);
 }
 
 bool StringToSizeT(const std::string& input, size_t* output) {
-  wxString str(input);
-  unsigned long val = 0;
-  if (str.ToULong(&val)) {
-    *output = val;
+  apr_uint64_t n = 0;
+  apr_status_t r = apr_cstr_atoui64(&n, input.c_str());
+  if (r == APR_SUCCESS) {
+    *output = (size_t)n;
     return true;
   }
-  else {
-    return false;
-  }
+  return false;
 }
 
 }

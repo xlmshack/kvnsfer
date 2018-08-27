@@ -1,8 +1,7 @@
 #include "http_server_response_info.h"
 #include "http_request_headers.h"
 #include "base/string_util.h"
-#include <wx/defs.h>
-#include <wx/string.h>
+#include <assert.h>
 
 HttpServerResponseInfo::HttpServerResponseInfo() : status_code_(HTTP_OK) {}
 
@@ -36,7 +35,7 @@ void HttpServerResponseInfo::AddHeader(const std::string& name,
 
 void HttpServerResponseInfo::SetBody(const std::string& body,
   const std::string& content_type) {
-  wxASSERT(body_.empty());
+  assert(body_.empty());
   body_ = body;
   SetContentHeaders(body.length(), content_type);
 }
@@ -51,7 +50,7 @@ void HttpServerResponseInfo::SetContentHeaders(
 
 std::string HttpServerResponseInfo::Serialize() const {
   std::string response = base::StringPrintf(
-    "HTTP/1.1 %d %s\r\n", status_code_, wxString(GetHttpReasonPhrase(status_code_)).ToStdWstring().c_str());
+    "HTTP/1.1 %d %s\r\n", status_code_, GetHttpReasonPhrase(status_code_));
   Headers::const_iterator header;
   for (header = headers_.begin(); header != headers_.end(); ++header)
     response += header->first + ":" + header->second + "\r\n";

@@ -4,7 +4,6 @@
 #include <memory>
 #include <string>
 #include <vector>
-#include <wx/defs.h>
 
 class HttpRequestHeaders {
 public:
@@ -38,7 +37,8 @@ public:
     HttpRequestHeaders::HeaderVector::const_iterator curr_;
     const HttpRequestHeaders::HeaderVector::const_iterator end_;
 
-    wxDECLARE_NO_COPY_CLASS(Iterator);
+    Iterator(const Iterator&) = delete;
+    Iterator& operator=(const Iterator&) = delete;
   };
 
   static const char kGetMethod[];

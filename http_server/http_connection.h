@@ -1,21 +1,24 @@
 #ifndef KVNSFER_HTTP_SERVER_HTTP_CONNECTION_H_
 #define KVNSFER_HTTP_SERVER_HTTP_CONNECTION_H_
 
-#include <wx/defs.h>
-#include <wx/buffer.h>
+#include <string>
+#include <apr.h>
 
 class HttpConnection {
 public:
-  HttpConnection(wxUint32 id);
+  HttpConnection(apr_uint32_t id);
   ~HttpConnection();
 
-  wxUint32 GetId();
-  wxMemoryBuffer& GetReadBuf();
-  wxMemoryBuffer& GetWriteBuf();
+  apr_uint32_t GetId();
+  std::string& GetReadBuf();
+  std::string& GetWriteBuf();
 
 private:
-  const wxUint32 id_;
-  wxMemoryBuffer read_buf_;
-  wxMemoryBuffer write_buf_;
+  const apr_uint32_t id_;
+  std::string read_buf_;
+  std::string write_buf_;
+
+  HttpConnection(const HttpConnection&) = delete;
+  HttpConnection& operator=(const HttpConnection&) = delete;
 };
 #endif // KVNSFER_HTTP_SERVER_HTTP_CONNECTION_H_

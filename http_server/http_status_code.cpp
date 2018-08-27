@@ -1,7 +1,5 @@
 #include "http_status_code.h"
-#include "wx/defs.h"
-#include <wx/string.h>
-
+#include <assert.h>
 const char* GetHttpReasonPhrase(HttpStatusCode code) {
   switch (code) {
 
@@ -10,7 +8,7 @@ const char* GetHttpReasonPhrase(HttpStatusCode code) {
 #undef HTTP_STATUS
 
   default:
-    wxASSERT_MSG(false, (wxString::Format("unknown HTTP status code %d", code).c_str()));
+    assert(false);
 
   }
 

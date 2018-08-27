@@ -1,5 +1,6 @@
 #include "event_loop.h"
 #include "winsock_init.h"
+#include <assert.h>
 
 EventLoop::Internal::Internal()
   :bev(nullptr) {}
@@ -28,9 +29,9 @@ EventLoop::Delegate* EventLoop::GetDelegate() {
   return delegate_;
 }
 
-bool EventLoop::Listen(const std::string& addr, uint16_t* port, int backlog) {
-  wxASSERT(!addr.empty());
-  wxASSERT(port);
+bool EventLoop::Listen(const std::string& addr, apr_uint16_t* port, int backlog) {
+  assert(!addr.empty());
+  assert(port);
   struct sockaddr_in sin;
   memset(&sin, 0, sizeof(sin));
   sin.sin_family = AF_INET;
@@ -42,7 +43,7 @@ bool EventLoop::Listen(const std::string& addr, uint16_t* port, int backlog) {
   return listener != nullptr;
 }
 
-wxUint32 EventLoop::Connect(const std::string& addr, uint16_t port) {
+apr_uint32_t EventLoop::Connect(const std::string& addr, apr_uint16_t port) {
   struct sockaddr_in sin;
   memset(&sin, 0, sizeof(sin));
   sin.sin_family = AF_INET;
@@ -57,7 +58,7 @@ wxUint32 EventLoop::Connect(const std::string& addr, uint16_t port) {
   return fd;
 }
 
-void EventLoop::Write(wxUint32 id, const char* buffer, wxUint32 size) {
+void EventLoop::Write(apr_uint32_t id, const char* buffer, apr_uint32_t size) {
   auto itbev = id_to_sockets_.find(id);
   if (itbev != id_to_sockets_.end()) {
     evbuffer* output = bufferevent_get_output(itbev->second.bev);
@@ -66,7 +67,7 @@ void EventLoop::Write(wxUint32 id, const char* buffer, wxUint32 size) {
   }
 }
 
-void EventLoop::Close(wxUint32 id) {
+void EventLoop::Close(apr_uint32_t id) {
   auto itbev = id_to_sockets_.find(id);
   if (itbev != id_to_sockets_.end()) {
     bufferevent_free(itbev->second.bev);
@@ -84,7 +85,7 @@ void EventLoop::Entry() {
 // static
 void EventLoop::do_accept_cb(struct evconnlistener* listener,
   evutil_socket_t fd, struct sockaddr* addr, int socklen, void* arg) {
-  wxASSERT(arg);
+  assert(arg);
   EventLoop* cur = (EventLoop*)arg;
   cur->do_accept_cb(listener, fd, addr, socklen);
 }
@@ -105,7 +106,7 @@ void EventLoop::do_accept_cb(struct evconnlistener* listener,
 
 // static
 void EventLoop::do_read_cb(struct bufferevent *bev, void *arg) {
-  wxASSERT(arg);
+  assert(arg);
   EventLoop* cur = (EventLoop*)arg;
   cur->do_read_cb(bev);
 }
@@ -113,20 +114,20 @@ void EventLoop::do_read_cb(struct bufferevent *bev, void *arg) {
 void EventLoop::do_read_cb(struct bufferevent *bev) {
   struct evbuffer *input = bufferevent_get_input(bev);
   evutil_socket_t fd = bufferevent_getfd(bev);
-  wxMemoryBuffer buffer;
+  std::string buffer;
   while (evbuffer_get_length(input) > 0) {
     char buf[1024];
     int nread = evbuffer_remove(input, buf, sizeof(buf));
     if (nread > 0)
-      buffer.AppendData(buf, nread);
+      buffer.append(buf, nread);
   }
-  if (buffer.GetDataLen() > 0 && delegate_)
-    delegate_->OnRead(fd, (const char*)buffer.GetData(), buffer.GetDataLen());
+  if (buffer.size() > 0 && delegate_)
+    delegate_->OnRead(fd, (const char*)buffer.c_str(), buffer.size());
 }
 
 // static
 void EventLoop::do_write_cb(struct bufferevent *bev, void *arg) {
-  wxASSERT(arg);
+  assert(arg);
   EventLoop* cur = (EventLoop*)arg;
   cur->do_write_cb(bev);
 }
@@ -139,7 +140,7 @@ void EventLoop::do_write_cb(struct bufferevent *bev) {
 
 // static
 void EventLoop::do_event_cb(struct bufferevent *bev, short what, void *arg) {
-  wxASSERT(arg);
+  assert(arg);
   EventLoop* cur = (EventLoop*)arg;
   cur->do_event_cb(bev, what);
 }

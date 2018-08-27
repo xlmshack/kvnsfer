@@ -15,7 +15,8 @@ public:
   virtual void CancelTransferTask() override;
   virtual void RemoveTransferTask() override;
 
-  wxDECLARE_NO_COPY_CLASS(TransferManagerImpl);
+  TransferManagerImpl(const TransferManagerImpl&) = delete;
+  TransferManagerImpl& operator=(const TransferManagerImpl&) = delete;
 };
 
 #endif // KVNSFER_TRANSFER_CORE_TRANSFER_MANAGER_IMPL_H_

@@ -15,7 +15,7 @@ HttpServer::~HttpServer() {
 
 }
 
-void HttpServer::StartServer(const std::string& addr, wxUint16* port) {
+void HttpServer::StartServer(const std::string& addr, apr_uint16_t* port) {
   event_loop_.Listen(addr, port, 1);
   event_loop_.Start();
 }
@@ -25,30 +25,30 @@ void HttpServer::StopServer() {
   event_loop_.Wait();
 }
 
-void HttpServer::OnAccept(wxUint32 id, const std::string& addr, wxUint16 port) {
+void HttpServer::OnAccept(apr_uint32_t id, const std::string& addr, apr_uint16_t port) {
   std::unique_ptr<HttpConnection> conn = std::make_unique<HttpConnection>(++last_id_);
   id_to_connection_[id] = std::move(conn);
   if (delegate_)
     delegate_->OnConnect(id);
 }
 
-void HttpServer::OnConnect(wxUint32 id) {
+void HttpServer::OnConnect(apr_uint32_t id) {
 
 }
 
-void HttpServer::OnRead(wxUint32 id, const char* buffer, wxUint32 size) {
+void HttpServer::OnRead(apr_uint32_t id, const char* buffer, apr_uint32_t size) {
   auto itconn = id_to_connection_.find(id);
   if (itconn == id_to_connection_.end()) {
     return;
   }
   HttpConnection& conn = *itconn->second;
-  wxMemoryBuffer& read_buf = conn.GetReadBuf();
-  read_buf.AppendData(buffer, size);
-  while (!read_buf.IsEmpty())
+  std::string& read_buf = conn.GetReadBuf();
+  read_buf.append(buffer, size);
+  while (!read_buf.empty())
   {
     HttpServerRequestInfo request;
     size_t pos = 0;
-    if (!ParseHeaders((const char*)read_buf.GetData(), read_buf.GetDataLen(),
+    if (!ParseHeaders((const char*)read_buf.c_str(), read_buf.size(),
       &request, &pos)) {
       // An error has occured. Close the connection.
       event_loop_.Close(id);
@@ -74,25 +74,25 @@ void HttpServer::OnRead(wxUint32 id, const char* buffer, wxUint32 size) {
         event_loop_.Close(id);
       }
 
-      if (read_buf.GetDataLen() - pos < content_length)
+      if (read_buf.size() - pos < content_length)
         break;  // Not enough data was received yet.
-      request.data.assign((char*)read_buf.GetData() + pos, content_length);
+      request.data.assign((char*)read_buf.c_str() + pos, content_length);
       pos += content_length;
     }
 
-    wxMemoryBuffer temp;
-    temp.AppendData(read_buf.GetData(), read_buf.GetDataLen());
-    read_buf.Clear();
-    read_buf.AppendData((char*)temp.GetData() + pos, temp.GetDataLen() - pos);
+    std::string temp;
+    temp.append(read_buf.c_str(), read_buf.size());
+    read_buf.clear();
+    read_buf.append((char*)temp.c_str() + pos, temp.size() - pos);
     delegate_->OnHttpRequest(id, request);
   }
 }
 
-void HttpServer::OnWrite(wxUint32 id) {
+void HttpServer::OnWrite(apr_uint32_t id) {
 
 }
 
-void HttpServer::OnClose(wxUint32 id) {
+void HttpServer::OnClose(apr_uint32_t id) {
 
 }
 
@@ -246,7 +246,7 @@ void HttpServer::SendRaw(int connection_id, const std::string& data) {
   if (itconn == id_to_connection_.end())
     return;
   HttpConnection& conn = *itconn->second;
-  wxMemoryBuffer& write_buf = conn.GetWriteBuf();
+  std::string& write_buf = conn.GetWriteBuf();
 
   event_loop_.Write(connection_id, data.c_str(), data.size());
 }

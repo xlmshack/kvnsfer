@@ -3,7 +3,6 @@
 
 #include <map>
 #include "event_loop.h"
-#include "wx/defs.h"
 
 class HttpServerRequestInfo;
 class HttpServerResponseInfo;
@@ -23,15 +22,15 @@ public:
   HttpServer(const std::string& vir_host, Delegate* delegate);
   ~HttpServer();
 
-  void StartServer(const std::string& addr, wxUint16* port);
+  void StartServer(const std::string& addr, apr_uint16_t* port);
   void StopServer();
 
   // EventLoop::Delegate
-  void OnAccept(wxUint32 id, const std::string& addr, wxUint16 port) wxOVERRIDE;
-  void OnConnect(wxUint32 id) wxOVERRIDE;
-  void OnRead(wxUint32 id, const char* buffer, wxUint32 size) wxOVERRIDE;
-  void OnWrite(wxUint32 id) wxOVERRIDE;
-  void OnClose(wxUint32 id) wxOVERRIDE;
+  void OnAccept(apr_uint32_t id, const std::string& addr, apr_uint16_t port) override;
+  void OnConnect(apr_uint32_t id) override;
+  void OnRead(apr_uint32_t id, const char* buffer, apr_uint32_t size) override;
+  void OnWrite(apr_uint32_t id) override;
+  void OnClose(apr_uint32_t id) override;
 
   void SendRaw(int connection_id, const std::string& data);
   void SendResponse(int connection_id, const HttpServerResponseInfo& response);
@@ -42,9 +41,12 @@ protected:
 
 private:
   EventLoop event_loop_;
-  std::map<wxUint32, std::unique_ptr<HttpConnection> > id_to_connection_;
-  wxUint32 last_id_;
+  std::map<apr_uint32_t, std::unique_ptr<HttpConnection> > id_to_connection_;
+  apr_uint32_t last_id_;
   Delegate* const delegate_;
+
+  HttpServer(const HttpServer&) = delete;
+  HttpServer& operator=(const HttpServer&) = delete;
 };
 
 #endif // KVNSFER_HTTP_SERVER_HTTP_SERVER_H_

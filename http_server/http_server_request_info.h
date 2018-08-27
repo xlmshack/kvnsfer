@@ -3,7 +3,6 @@
 
 #include <string>
 #include <map>
-#include <wx/socket.h>
 
 class HttpServerRequestInfo {
 public:
@@ -22,7 +21,7 @@ public:
     const std::string& header_value) const;
 
   // Request peer address.
-  wxIPV4address peer;
+  //wxIPV4address peer;
 
   // Request method.
   std::string method;

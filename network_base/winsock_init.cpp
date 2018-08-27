@@ -1,5 +1,5 @@
 #include "winsock_init.h"
-#include <wx/defs.h>
+#include <assert.h>
 
 class WinsockInitSingleton {
 public:
@@ -8,7 +8,7 @@ public:
     WSAData wsa_data;
     bool did_init = (WSAStartup(winsock_ver, &wsa_data) == 0);
     if (did_init) {
-      wxASSERT(wsa_data.wVersion == winsock_ver);
+      assert(wsa_data.wVersion == winsock_ver);
 
       // The first time WSAGetLastError is called, the delay load helper will
       // resolve the address with GetProcAddress and fixup the import.  If a

@@ -1,8 +1,5 @@
 #include "string_split.h"
 #include "string_util.h"
-#include <wx/string.h>
-#include <wx/defs.h>
-#include <wx/arrstr.h>
 
 namespace base {
 std::vector<std::string> SplitString(
