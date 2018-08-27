@@ -90,7 +90,7 @@
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <SDLCheck>true</SDLCheck>
-      <AdditionalIncludeDirectories>..\..\apr-1.6.3-win32-src\apr-1.6.3\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\..\apr-1.6.3-win32-src\apr-1.6.3\include;..\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
       <PreprocessorDefinitions>APR_DECLARE_EXPORT;%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
@@ -119,6 +119,7 @@
     <ClInclude Include="apr_init.h" />
     <ClInclude Include="blocking_queue.h" />
     <ClInclude Include="condition.h" />
+    <ClInclude Include="file.h" />
     <ClInclude Include="mutex.h" />
     <ClInclude Include="string_split.h" />
     <ClInclude Include="string_util.h" />
@@ -129,6 +130,7 @@
     <ClCompile Include="base_test.cpp" />
     <ClCompile Include="blocking_queue.cpp" />
     <ClCompile Include="condition.cpp" />
+    <ClCompile Include="file.cpp" />
     <ClCompile Include="mutex.cpp" />
     <ClCompile Include="string_split.cpp" />
     <ClCompile Include="string_util.cpp" />
